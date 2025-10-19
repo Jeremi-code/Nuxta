@@ -1,5 +1,7 @@
-import { exec } from 'child_process';
-import * as fs from 'fs';
+import { exec } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
+import chalk from "chalk";
 
 export function executeCommand(command: string, cwd?: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -26,4 +28,15 @@ export function writeToFile(filePath: string, content: string): Promise<void> {
       resolve();
     });
   });
+}
+
+export function ensureProjectInitialized() {
+  if (!fs.existsSync(path.join(path.join(process.cwd(), ".nuxt")))) {
+    console.error(
+      chalk.red(
+        "❌ No Nuxt project detected. Please run `create-nuxt-hasura-cli init <project-name>` first."
+      )
+    );
+    process.exit(1);
+  }
 }
