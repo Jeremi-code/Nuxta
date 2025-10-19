@@ -7,7 +7,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "link": "pnpm build && pnpm link --global"
+    "link": "pnpm build && pnpm link --global",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +16,10 @@
   "packageManager": "pnpm@10.9.0",
   "devDependencies": {
     "@types/inquirer": "^9.0.9",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.3.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.2"
   },
