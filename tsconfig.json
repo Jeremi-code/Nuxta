@@ -6,7 +6,9 @@
     "rootDir": "src",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "strict": true
+    "strict": true,
+    "types": ["jest", "node"]
   },
-  "include": ["src"]
+  "include": ["src", "src/**/*.test.ts"],
+  "exclude": ["node_modules"]
 }
