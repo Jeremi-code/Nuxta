@@ -10,5 +10,6 @@ export const createSpinner = (text: string) => {
     info: (message: string) => spinner.info(chalk.blue(message)),
     warn: (message: string) => spinner.warn(chalk.yellow(message)),
     text: (message: string) => (spinner.text = message),
+    stop: () => spinner.stop(),
   };
 };
