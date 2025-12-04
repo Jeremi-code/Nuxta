@@ -1,21 +1,46 @@
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import chalk from "chalk";
 import { createSpinner } from "./spinner";
 
-export function executeCommand(command: string, cwd?: string): Promise<string> {
+export interface ExecuteCommandOptions {
+  cwd?: string;
+  stdio?: "inherit" | "ignore" | "pipe" | any[];
+}
+
+export function executeCommand(
+  command: string,
+  options: ExecuteCommandOptions = {}
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    exec(command, { cwd }, (error, stdout, stderr) => {
-      console.log(stdout);
-      if (error) {
-        reject(error);
-        return;
+    const child = spawn(command, [], {
+      cwd: options.cwd,
+      stdio: options.stdio || "inherit",
+      shell: true,
+    });
+
+    let stderr = "";
+
+    if (child.stderr) {
+      child.stderr.on("data", (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on("error", (error: Error) => {
+      reject(error);
+    });
+
+    child.on("close", (code: number) => {
+      if (code !== 0) {
+        const errorMessage = stderr
+          ? `Command failed with exit code ${code}: ${stderr}`
+          : `Command failed with exit code ${code}`;
+        reject(new Error(errorMessage));
+      } else {
+        resolve();
       }
-      if (stderr) {
-        createSpinner("").fail(`stderr: ${stderr}`);
-      }
-      resolve(stdout);
     });
   });
 }

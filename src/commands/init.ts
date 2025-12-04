@@ -13,8 +13,11 @@ export const initCommand = new Command()
     const spinner = createSpinner(
       `Initializing new Nuxt.js project: ${projectName}...`
     );
+    spinner.stop();
     try {
-      await executeCommand(`npx nuxi init ${projectName}`);
+      await executeCommand(`npx nuxi init ${projectName} --verbose`, {
+        stdio: "inherit",
+      });
       spinner.succeed(
         chalk.green(`Nuxt.js project '${projectName}' created successfully!`)
       );

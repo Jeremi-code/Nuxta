@@ -4,9 +4,8 @@ import { hasuraCommand } from "./commands/hasura";
 import { codegenCommand } from "./commands/codegen";
 import { getSchemaCommand } from "./commands/get-schema";
 import { graphqlClientCommand } from "./commands/graphql-client";
-import { configCommand } from "./commands/config";
 
-const program = new Command();
+export const program = new Command();
 
 program
   .name("nuxta")
@@ -20,7 +19,6 @@ program.addCommand(hasuraCommand);
 program.addCommand(codegenCommand);
 program.addCommand(getSchemaCommand);
 program.addCommand(graphqlClientCommand);
-program.addCommand(configCommand);
 
 program.parse(process.argv);
 
