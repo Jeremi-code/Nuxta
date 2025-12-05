@@ -2,9 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { createSpinner } from "../utils/spinner";
-import { executeCommand } from "../utils";
-
-type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+import { executeCommand, getPackageExecutor, PackageManager } from "../utils";
 
 export const initCommand = new Command()
   .name("init")
@@ -12,7 +10,6 @@ export const initCommand = new Command()
   .argument("<project-name>", "Name of the Nuxt.js project")
   .option("--no-git", "Skip git initialization")
   .action(async (projectName: string, options: { git: boolean }) => {
-    // Ask for package manager
     const { packageManager } = await inquirer.prompt<{
       packageManager: PackageManager;
     }>([
@@ -29,12 +26,13 @@ export const initCommand = new Command()
       },
     ]);
 
-    // Initialize Nuxt project
+    const executor = getPackageExecutor(packageManager);
+
     const spinner = createSpinner(`Creating Nuxt project: ${projectName}...`);
     spinner.stop();
     try {
       await executeCommand(
-        `npx -y giget@latest gh:nuxt/starter#v3 ${projectName}`,
+        `${executor} giget@latest gh:nuxt/starter#v3 ${projectName}`,
         {
           stdio: "pipe",
         }
@@ -47,7 +45,6 @@ export const initCommand = new Command()
       process.exit(1);
     }
 
-    // Install dependencies
     const installSpinner = createSpinner("Installing dependencies...");
 
     try {
@@ -63,7 +60,6 @@ export const initCommand = new Command()
       process.exit(1);
     }
 
-    // Initialize git (unless --no-git)
     if (options.git) {
       const gitSpinner = createSpinner("Initializing git repository...");
 

@@ -9,6 +9,18 @@ export interface ExecuteCommandOptions {
   stdio?: "inherit" | "ignore" | "pipe" | any[];
 }
 
+export type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+
+export function getPackageExecutor(pm: PackageManager): string {
+  const executors: Record<PackageManager, string> = {
+    npm: "npx -y",
+    yarn: "yarn dlx",
+    pnpm: "pnpx",
+    bun: "bunx",
+  };
+  return executors[pm];
+}
+
 export function executeCommand(
   command: string,
   options: ExecuteCommandOptions = {}
