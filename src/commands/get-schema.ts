@@ -1,51 +1,86 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { executeCommand, addScriptToPackageJson } from "../utils";
+import {
+  executeCommand,
+  addScriptToPackageJson,
+  getAddCommand,
+  detectPackageManager,
+} from "../utils";
+import { PackageManager } from "../types";
 import { createSpinner } from "../utils/spinner";
+import { createEnvFile } from "../utils";
+
+export async function setupGetSchema(
+  packageManager?: PackageManager
+): Promise<void> {
+  try {
+    const pm = packageManager || detectPackageManager();
+
+    const answers = await inquirer.prompt([
+      {
+        type: "input",
+        name: "schemaEndpoint",
+        message: "Enter your GraphQL schema endpoint:",
+        default: "http://localhost:8080/v1/graphql",
+      },
+      {
+        type: "input",
+        name: "outputPath",
+        message:
+          "Enter the output path for the schema file (e.g., ./schema.graphql):",
+        default: "./schema.graphql",
+      },
+    ]);
+
+    const { schemaEndpoint, outputPath } = answers;
+
+    const scripts = {
+      "fetch:schema": `dotenv -- sh -c \'get-graphql-schema -h "x-hasura-admin-secret=$NUXT_HASURA_GRAPHQL_ADMIN_SECRET" "$NUXT_HASURA_GRAPHQL_ENDPOINT_LOCAL" > ${outputPath}\'`,
+    };
+
+    const addCmd = getAddCommand(pm, true);
+
+    const spinner = createSpinner("Installing get-graphql-schema...");
+    await executeCommand(`${addCmd} get-graphql-schema`, { stdio: "pipe" });
+    spinner.succeed("get-graphql-schema installed.");
+
+    const dotenvSpinner = createSpinner("Installing dotenv-cli...");
+    await executeCommand(`${addCmd} dotenv-cli`, { stdio: "pipe" });
+    dotenvSpinner.succeed("dotenv-cli installed.");
+
+    await addScriptToPackageJson(scripts);
+    console.log(chalk.green("✔ Scripts added to package.json"));
+
+    const result = createEnvFile(
+      [
+        {
+          key: "NUXT_HASURA_GRAPHQL_ENDPOINT_LOCAL",
+          value: schemaEndpoint,
+        },
+        {
+          key: "NUXT_HASURA_GRAPHQL_ADMIN_SECRET",
+          value: "your-admin-secret-here",
+        },
+      ],
+      { header: "GraphQL Configuration" }
+    );
+
+    if (result.created) {
+      console.log(chalk.green("✔ .env.example created"));
+    } else {
+      console.log(chalk.yellow("ℹ .env.example already exists, skipping"));
+    }
+  } catch (error) {
+    const errorSpinner = createSpinner("");
+    errorSpinner.fail(
+      `Failed to set up get-schema: ${(error as Error).message}`
+    );
+    throw error;
+  }
+}
 
 export const getSchemaCommand = new Command()
   .name("get-schema")
   .description("Fetch GraphQL schema from a specified endpoint.")
-  .action(async () => {
-    const spinner = createSpinner("Fetching GraphQL schema...");
-    try {
-      // ensureProjectInitialized();
-      const answers = await inquirer.prompt([
-        {
-          type: "input",
-          name: "schemaEndpoint",
-          message: "Enter your GraphQL schema endpoint:",
-          default: "http://localhost:8080/v1/graphql",
-        },
-        {
-          type: "input",
-          name: "outputPath",
-          message:
-            "Enter the output path for the schema file (e.g., ./schema.graphql):",
-          default: "./schema.graphql",
-        },
-      ]);
-
-      const { schemaEndpoint, outputPath } = answers;
-
-      const scripts = {
-        "fetch:schema":
-          'dotenv -- sh -c \'get-graphql-schema -h "x-hasura-admin-secret=$NUXT_HASURA_GRAPHQL_ADMIN_SECRET" "$NUXT_HASURA_GRAPHQL_ENDPOINT_LOCAL" > ./gqlGen/schema.gql\'',
-        codegen:
-          "pnpm fetch:schema && graphql-codegen --config codegen.ts --watch",
-      };
-
-      spinner.text(chalk.blue("Installing get-graphql-schema..."));
-      await executeCommand("pnpm add -D get-graphql-schema");
-      await executeCommand("pnpm add -D dotenv");
-      await addScriptToPackageJson(scripts);
-      spinner.succeed(
-        chalk.green("get-graphql-schema installed, scripts added.")
-      );
-    } catch (error) {
-      spinner.fail(
-        chalk.red(`Failed to fetch GraphQL schema: ${(error as Error).message}`)
-      );
-    }
-  });
+  .action(() => setupGetSchema());

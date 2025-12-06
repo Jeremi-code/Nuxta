@@ -2,14 +2,31 @@ import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { createSpinner } from "../utils/spinner";
-import { executeCommand, getPackageExecutor, PackageManager } from "../utils";
+import { executeCommand, getPackageExecutor } from "../utils";
+import { PackageManager } from "../types";
+import { setupHasura } from "./hasura";
+import { setupCodegen } from "./codegen";
+import { setupGetSchema } from "./get-schema";
+import { setupGraphqlClient, GraphqlClient } from "./graphql-client";
+
+interface InitOptions {
+  git: boolean;
+  hasura: boolean;
+  codegen: boolean;
+  getSchema: boolean;
+  graphqlClient?: GraphqlClient;
+}
 
 export const initCommand = new Command()
   .name("init")
   .description("Initialize a new Nuxt.js project.")
   .argument("<project-name>", "Name of the Nuxt.js project")
   .option("--no-git", "Skip git initialization")
-  .action(async (projectName: string, options: { git: boolean }) => {
+  .option("--hasura", "Set up Hasura GraphQL")
+  .option("--codegen", "Set up GraphQL Codegen")
+  .option("--get-schema", "Set up get-graphql-schema")
+  .option("--graphql-client <type>", "Set up GraphQL client (apollo or urql)")
+  .action(async (projectName: string, options: InitOptions) => {
     const { packageManager } = await inquirer.prompt<{
       packageManager: PackageManager;
     }>([
@@ -74,6 +91,36 @@ export const initCommand = new Command()
           `Failed to initialize git: ${(error as Error).message}`
         );
       }
+    }
+
+    const originalCwd = process.cwd();
+    process.chdir(projectName);
+
+    try {
+      if (options.hasura) {
+        console.log();
+        await setupHasura(true);
+      }
+
+      if (options.codegen) {
+        console.log();
+        await setupCodegen(packageManager);
+      }
+
+      if (options.getSchema) {
+        console.log();
+        await setupGetSchema(packageManager);
+      }
+
+      if (options.graphqlClient) {
+        console.log();
+        await setupGraphqlClient(
+          options.graphqlClient as GraphqlClient,
+          packageManager
+        );
+      }
+    } finally {
+      process.chdir(originalCwd);
     }
 
     console.log();
