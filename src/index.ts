@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import { initCommand } from "./commands/init";
-import { hasuraCommand } from "./commands/hasura";
 import { codegenCommand } from "./commands/codegen";
 import { getSchemaCommand } from "./commands/get-schema";
 import { graphqlClientCommand } from "./commands/graphql-client";
@@ -15,7 +14,6 @@ program
   .version("1.0.0");
 
 program.addCommand(initCommand);
-program.addCommand(hasuraCommand);
 program.addCommand(codegenCommand);
 program.addCommand(getSchemaCommand);
 program.addCommand(graphqlClientCommand);

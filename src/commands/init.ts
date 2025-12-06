@@ -4,7 +4,6 @@ import inquirer from "inquirer";
 import { createSpinner } from "../utils/spinner";
 import { executeCommand, getPackageExecutor } from "../utils";
 import { PackageManager } from "../types";
-import { setupHasura } from "./hasura";
 import { setupCodegen } from "./codegen";
 import { setupGetSchema } from "./get-schema";
 import { setupGraphqlClient, GraphqlClient } from "./graphql-client";
@@ -97,11 +96,6 @@ export const initCommand = new Command()
     process.chdir(projectName);
 
     try {
-      if (options.hasura) {
-        console.log();
-        await setupHasura(true);
-      }
-
       if (options.codegen) {
         console.log();
         await setupCodegen(packageManager);
