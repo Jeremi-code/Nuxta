@@ -48,20 +48,21 @@ export async function setupCodegen(
       "Initializing GraphQL Codegen configuration..."
     );
     const codegenConfig = `
-module.exports = {
+import { type CodegenConfig } from "@graphql-codegen/cli";
+import { type TypeScriptPluginConfig } from "@graphql-codegen/typescript";
+import { getNullableType } from "graphql";
+const config: CodegenConfig = {
   overwrite: true,
-  schema: "${schemaPath}",
-  documents: "graphql/**/*.graphql",
+  schema: "./gqlGen/schema.gql",
+  documents: ["graphql/**/*.{graphql,gql}"],
   generates: {
-    "${outputDir}/": {
-      preset: "client",
-      plugins: [],
-      presetConfig: {
-        gqlTagName: "gql",
-      }
-    }
-  }
+    "./gqlGen/types.ts": {
+      plugins: ["typescript", "typescript-operations", "typed-document-node"],
+      config: {} satisfies TypeScriptPluginConfig,
+    },
+  },
 };
+export default config;
 `;
     await writeToFile(`${process.cwd()}/codegen.ts`, codegenConfig);
     configSpinner.succeed("GraphQL Codegen configuration created.");
