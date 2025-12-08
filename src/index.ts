@@ -30,10 +30,11 @@ program.addCommand(codegenCommand);
 program.addCommand(getSchemaCommand);
 program.addCommand(graphqlClientCommand);
 
-// Show logo when running without arguments
 if (!process.argv.slice(2).length) {
   console.log(logo);
-  program.outputHelp();
+  console.log("");
+  console.log(program.description());
+  console.log("");
   process.exit(0);
 }
 
