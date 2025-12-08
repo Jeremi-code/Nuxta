@@ -10,6 +10,7 @@ import {
 import { PackageManager } from "../types";
 import { createSpinner } from "../utils/spinner";
 import { createEnvFile } from "../utils";
+import { createProgressBar } from "../utils/progress";
 
 export async function setupGetSchema(
   packageManager?: PackageManager
@@ -40,14 +41,38 @@ export async function setupGetSchema(
     };
 
     const addCmd = getAddCommand(pm, true);
+    const getGraphqlSchemaProgressBar = createProgressBar({
+      message: "Installing get-graphql-schema",
+    });
 
-    const spinner = createSpinner("Installing get-graphql-schema...");
-    await executeCommand(`${addCmd} get-graphql-schema`, { stdio: "pipe" });
-    spinner.succeed("get-graphql-schema installed.");
+    getGraphqlSchemaProgressBar.start();
+    try {
+      await executeCommand(`${addCmd} get-graphql-schema`, { stdio: "pipe" });
+      getGraphqlSchemaProgressBar.stop(true);
+    } catch (error) {
+      getGraphqlSchemaProgressBar.stop(false);
+      console.log(
+        chalk.red(
+          `Failed to install get-graphql-schema: ${(error as Error).message}`
+        )
+      );
+      process.exit(1);
+    }
+    const dotenvProgressBar = createProgressBar({
+      message: "Installing dotenv-cli",
+    });
 
-    const dotenvSpinner = createSpinner("Installing dotenv-cli...");
-    await executeCommand(`${addCmd} dotenv-cli`, { stdio: "pipe" });
-    dotenvSpinner.succeed("dotenv-cli installed.");
+    dotenvProgressBar.start();
+    try {
+      await executeCommand(`${addCmd} dotenv-cli`, { stdio: "pipe" });
+      dotenvProgressBar.stop(true);
+    } catch (error) {
+      dotenvProgressBar.stop(true);
+      console.log(
+        chalk.red(`Failed to install dotenv-cli: ${(error as Error).message}`)
+      );
+      process.exit(1);
+    }
 
     await addScriptToPackageJson(scripts);
     console.log(chalk.green("✔ Scripts added to package.json"));

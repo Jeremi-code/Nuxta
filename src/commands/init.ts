@@ -2,6 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { createSpinner } from "../utils/spinner";
+import { createProgressBar } from "../utils/progress";
 import { executeCommand, getPackageExecutor } from "../utils";
 import { PackageManager } from "../types";
 import { setupCodegen } from "./codegen";
@@ -45,7 +46,6 @@ export const initCommand = new Command()
     const executor = getPackageExecutor(packageManager);
 
     const spinner = createSpinner(`Creating Nuxt project: ${projectName}...`);
-    spinner.stop();
     try {
       await executeCommand(
         `${executor} giget@latest gh:nuxt/starter#v3 ${projectName}`,
@@ -61,17 +61,21 @@ export const initCommand = new Command()
       process.exit(1);
     }
 
-    const installSpinner = createSpinner("Installing dependencies...");
+    const progressBar = createProgressBar({
+      message: "Installing dependencies",
+    });
 
+    progressBar.start();
     try {
       await executeCommand(`${packageManager} install`, {
         cwd: projectName,
         stdio: "pipe",
       });
-      installSpinner.succeed("Dependencies installed.");
+      progressBar.stop(true);
     } catch (error) {
-      installSpinner.fail(
-        `Failed to install dependencies: ${(error as Error).message}`
+      progressBar.stop(false);
+      console.log(
+        chalk.red(`Failed to install dependencies: ${(error as Error).message}`)
       );
       process.exit(1);
     }

@@ -10,6 +10,7 @@ import {
 import * as path from "path";
 import { PackageManager } from "../types";
 import { createSpinner } from "../utils/spinner";
+import { createProgressBar } from "../utils/progress";
 
 export type GraphqlClient = "apollo" | "urql";
 
@@ -60,9 +61,12 @@ export async function setupGraphqlClient(
         },
       ]);
 
-      const spinner = createSpinner("Installing Nuxt Apollo dependencies...");
+      const progressBar = createProgressBar({
+        message: "Installing Nuxt Apollo dependencies",
+      });
+      progressBar.start();
       await executeCommand(`${addCmd} @nuxtjs/apollo`, { stdio: "pipe" });
-      spinner.succeed("Nuxt Apollo installed.");
+      progressBar.stop(true);
 
       // Determine directory based on Nuxt version
       const configDir =
@@ -105,9 +109,12 @@ export default defineApolloClient({
         },
       ]);
 
-      const spinner = createSpinner("Installing Nuxt Urql dependencies...");
+      const progressBar = createProgressBar({
+        message: "Installing Nuxt Urql dependencies",
+      });
+      progressBar.start();
       await executeCommand(`${addCmd} @urql/vue graphql`, { stdio: "pipe" });
-      spinner.succeed("Nuxt Urql installed.");
+      progressBar.stop(true);
 
       // Determine directory based on Nuxt version
       const pluginsDir =

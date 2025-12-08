@@ -12,6 +12,7 @@ import {
 import * as fs from "fs";
 import { PackageManager } from "../types";
 import { createSpinner } from "../utils/spinner";
+import { createProgressBar } from "../utils/progress";
 
 export async function setupCodegen(
   packageManager?: PackageManager
@@ -64,13 +65,14 @@ export async function setupCodegen(
     });
 
     if (packagesToInstall.length > 0) {
-      const spinner = createSpinner(
-        "Installing GraphQL Codegen dependencies..."
-      );
+      const progressBar = createProgressBar({
+        message: "Installing GraphQL Codegen dependencies",
+      });
+      progressBar.start();
       await executeCommand(`${addCmd} ${packagesToInstall.join(" ")}`, {
         stdio: "pipe",
       });
-      spinner.succeed("GraphQL Codegen dependencies installed.");
+      progressBar.stop(true);
     } else {
       console.log(
         chalk.green("All GraphQL Codegen dependencies are already installed.")
