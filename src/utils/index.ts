@@ -197,3 +197,36 @@ export function appendToEnvFile(
   fs.writeFileSync(filePath, content);
   return { action: "appended", path: filePath };
 }
+
+/**
+ * Detects the Nuxt version from package.json
+ * @returns Major version number (3 or 4) or null if Nuxt is not found
+ */
+export function detectNuxtVersion(): number | null {
+  const packageJsonPath = path.join(process.cwd(), "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    return null;
+  }
+
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+  const nuxtVersion =
+    packageJson.dependencies?.nuxt || packageJson.devDependencies?.nuxt;
+
+  if (!nuxtVersion) {
+    return null;
+  }
+
+  // Extract major version from version string (e.g., "^4.0.0" -> 4)
+  const match = nuxtVersion.match(/\d+/);
+  return match ? parseInt(match[0], 10) : null;
+}
+
+/**
+ * Ensures a directory exists, creating it recursively if needed
+ * @param dirPath - Path to the directory
+ */
+export function ensureDirectoryExists(dirPath: string): void {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+}

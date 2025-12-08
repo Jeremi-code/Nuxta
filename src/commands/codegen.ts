@@ -7,7 +7,9 @@ import {
   getAddCommand,
   detectPackageManager,
   getPackageExecutor,
+  addScriptToPackageJson,
 } from "../utils";
+import * as fs from "fs";
 import { PackageManager } from "../types";
 import { createSpinner } from "../utils/spinner";
 
@@ -37,12 +39,43 @@ export async function setupCodegen(
     const { schemaPath, outputDir } = answers;
     const addCmd = getAddCommand(pm, true);
 
-    const spinner = createSpinner("Installing GraphQL Codegen dependencies...");
-    await executeCommand(
-      `${addCmd} @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-vue-apollo`,
-      { stdio: "pipe" }
-    );
-    spinner.succeed("GraphQL Codegen dependencies installed.");
+    const packages = [
+      "@graphql-codegen/cli",
+      "@graphql-codegen/typescript",
+      "@graphql-codegen/typescript-operations",
+      "@graphql-codegen/typescript-vue-apollo",
+    ];
+
+    const packageJsonPath = `${process.cwd()}/package.json`;
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    const allDeps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
+
+    const packagesToInstall = packages.filter((pkg) => {
+      if (allDeps[pkg]) {
+        console.log(
+          chalk.yellow(`Package ${pkg} is already installed. Skipping...`)
+        );
+        return false;
+      }
+      return true;
+    });
+
+    if (packagesToInstall.length > 0) {
+      const spinner = createSpinner(
+        "Installing GraphQL Codegen dependencies..."
+      );
+      await executeCommand(`${addCmd} ${packagesToInstall.join(" ")}`, {
+        stdio: "pipe",
+      });
+      spinner.succeed("GraphQL Codegen dependencies installed.");
+    } else {
+      console.log(
+        chalk.green("All GraphQL Codegen dependencies are already installed.")
+      );
+    }
 
     const configSpinner = createSpinner(
       "Initializing GraphQL Codegen configuration..."
@@ -53,10 +86,10 @@ import { type TypeScriptPluginConfig } from "@graphql-codegen/typescript";
 import { getNullableType } from "graphql";
 const config: CodegenConfig = {
   overwrite: true,
-  schema: "./gqlGen/schema.gql",
+  schema: "${schemaPath}",
   documents: ["graphql/**/*.{graphql,gql}"],
   generates: {
-    "./gqlGen/types.ts": {
+    "${outputDir}/types.ts": {
       plugins: ["typescript", "typescript-operations", "typed-document-node"],
       config: {} satisfies TypeScriptPluginConfig,
     },
@@ -66,6 +99,10 @@ export default config;
 `;
     await writeToFile(`${process.cwd()}/codegen.ts`, codegenConfig);
     configSpinner.succeed("GraphQL Codegen configuration created.");
+
+    await addScriptToPackageJson({
+      codegen: "pnpm fetch:schema && graphql-codegen --watch",
+    });
 
     const executor = getPackageExecutor(pm);
     const genSpinner = createSpinner("Generating GraphQL types...");

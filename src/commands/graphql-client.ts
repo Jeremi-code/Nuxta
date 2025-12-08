@@ -1,7 +1,13 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { executeCommand } from "../utils";
+import {
+  executeCommand,
+  writeToFile,
+  detectNuxtVersion,
+  ensureDirectoryExists,
+} from "../utils";
+import * as path from "path";
 import { PackageManager } from "../types";
 import { createSpinner } from "../utils/spinner";
 
@@ -40,23 +46,105 @@ export async function setupGraphqlClient(
     }
 
     const addCmd = getAddCommand(packageManager);
+    const nuxtVersion = detectNuxtVersion();
 
     if (selectedClient === "apollo") {
+      // Prompt for token name
+      const { tokenName } = await inquirer.prompt([
+        {
+          type: "input",
+          name: "tokenName",
+          message:
+            "Enter the token name for Apollo (e.g., apollo:myapp.token):",
+          default: "apollo:app.token",
+        },
+      ]);
+
       const spinner = createSpinner("Installing Nuxt Apollo dependencies...");
       await executeCommand(`${addCmd} @nuxtjs/apollo`, { stdio: "pipe" });
       spinner.succeed("Nuxt Apollo installed.");
+
+      // Determine directory based on Nuxt version
+      const configDir =
+        nuxtVersion && nuxtVersion >= 4 ? "app/apollo" : "apollo";
+      const configPath = `${process.cwd()}/${configDir}/apollo.ts`;
+
+      ensureDirectoryExists(`${process.cwd()}/${configDir}`);
+
+      const apolloConfig = `import { defineApolloClient } from "@nuxtjs/apollo/config";
+
+export default defineApolloClient({
+  httpEndpoint: process.env.NUXT_HASURA_GRAPHQL_ENDPOINT!,
+  tokenName: "${tokenName}",
+  httpLinkOptions: {
+    credentials: "include",
+  },
+});
+`;
+
+      await writeToFile(configPath, apolloConfig);
+      const configSpinner = createSpinner("");
+      configSpinner.succeed(
+        `Apollo configuration created at ${configDir}/apollo.ts`
+      );
+
       console.log(
         chalk.yellow(
-          'Please remember to add "@nuxtjs/apollo" to your nuxt.config.ts modules.'
+          '\nPlease remember to add "@nuxtjs/apollo" to your nuxt.config.ts modules.'
         )
       );
     } else if (selectedClient === "urql") {
+      // Prompt for token name
+      const { tokenName } = await inquirer.prompt([
+        {
+          type: "input",
+          name: "tokenName",
+          message:
+            "Enter the cookie name for authentication (e.g., auth-token):",
+          default: "auth-token",
+        },
+      ]);
+
       const spinner = createSpinner("Installing Nuxt Urql dependencies...");
       await executeCommand(`${addCmd} @urql/vue graphql`, { stdio: "pipe" });
       spinner.succeed("Nuxt Urql installed.");
+
+      // Determine directory based on Nuxt version
+      const pluginsDir =
+        nuxtVersion && nuxtVersion >= 4 ? "app/plugins" : "plugins";
+      const configPath = `${process.cwd()}/${pluginsDir}/urql.ts`;
+
+      ensureDirectoryExists(`${process.cwd()}/${pluginsDir}`);
+
+      const urqlConfig = `import { createClient, provideClient } from '@urql/vue';
+
+export default defineNuxtPlugin((nuxtApp) => {
+  const client = createClient({
+    url: process.env.NUXT_HASURA_GRAPHQL_ENDPOINT!,
+    fetchOptions: () => {
+      const token = useCookie('${tokenName}');
+
+      return {
+        headers: {
+          Authorization: token.value ? \`Bearer \${token.value}\` : '',
+        },
+      };
+    },
+  });
+
+  provideClient(client);
+});
+`;
+
+      await writeToFile(configPath, urqlConfig);
+      const configSpinner = createSpinner("");
+      configSpinner.succeed(
+        `Urql configuration created at ${pluginsDir}/urql.ts`
+      );
+
       console.log(
-        chalk.yellow(
-          "Please remember to configure Urql in your Nuxt.js project."
+        chalk.green(
+          "\nUrql has been configured with authentication support using useCookie."
         )
       );
     }
