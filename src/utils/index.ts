@@ -173,7 +173,6 @@ export function appendToEnvFile(
 
   const existingContent = fs.readFileSync(filePath, "utf-8");
 
-  // Filter out variables that already exist
   const newVariables = variables.filter(
     (v) => !existingContent.includes(`${v.key}=`)
   );
@@ -216,7 +215,6 @@ export function detectNuxtVersion(): number | null {
     return null;
   }
 
-  // Extract major version from version string (e.g., "^4.0.0" -> 4)
   const match = nuxtVersion.match(/\d+/);
   return match ? parseInt(match[0], 10) : null;
 }

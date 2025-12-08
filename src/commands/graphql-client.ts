@@ -6,23 +6,11 @@ import {
   writeToFile,
   detectNuxtVersion,
   ensureDirectoryExists,
+  getAddCommand,
 } from "../utils";
-import * as path from "path";
-import { PackageManager } from "../types";
+import { PackageManager, GraphqlClient } from "../types";
 import { createSpinner } from "../utils/spinner";
 import { createProgressBar } from "../utils/progress";
-
-export type GraphqlClient = "apollo" | "urql";
-
-function getAddCommand(pm: PackageManager): string {
-  const commands: Record<PackageManager, string> = {
-    npm: "npm install",
-    yarn: "yarn add",
-    pnpm: "pnpm add",
-    bun: "bun add",
-  };
-  return commands[pm];
-}
 
 export async function setupGraphqlClient(
   client?: GraphqlClient,
@@ -50,7 +38,6 @@ export async function setupGraphqlClient(
     const nuxtVersion = detectNuxtVersion();
 
     if (selectedClient === "apollo") {
-      // Prompt for token name
       const { tokenName } = await inquirer.prompt([
         {
           type: "input",
@@ -68,7 +55,6 @@ export async function setupGraphqlClient(
       await executeCommand(`${addCmd} @nuxtjs/apollo`, { stdio: "pipe" });
       progressBar.stop(true);
 
-      // Determine directory based on Nuxt version
       const configDir =
         nuxtVersion && nuxtVersion >= 4 ? "app/apollo" : "apollo";
       const configPath = `${process.cwd()}/${configDir}/apollo.ts`;
@@ -98,7 +84,6 @@ export default defineApolloClient({
         )
       );
     } else if (selectedClient === "urql") {
-      // Prompt for token name
       const { tokenName } = await inquirer.prompt([
         {
           type: "input",
@@ -116,7 +101,6 @@ export default defineApolloClient({
       await executeCommand(`${addCmd} @urql/vue graphql`, { stdio: "pipe" });
       progressBar.stop(true);
 
-      // Determine directory based on Nuxt version
       const pluginsDir =
         nuxtVersion && nuxtVersion >= 4 ? "app/plugins" : "plugins";
       const configPath = `${process.cwd()}/${pluginsDir}/urql.ts`;

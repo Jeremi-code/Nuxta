@@ -4,18 +4,10 @@ import inquirer from "inquirer";
 import { createSpinner } from "../utils/spinner";
 import { createProgressBar } from "../utils/progress";
 import { executeCommand, getPackageExecutor } from "../utils";
-import { PackageManager } from "../types";
+import { PackageManager, GraphqlClient, InitOptions } from "../types";
 import { setupCodegen } from "./codegen";
 import { setupGetSchema } from "./get-schema";
-import { setupGraphqlClient, GraphqlClient } from "./graphql-client";
-
-interface InitOptions {
-  git: boolean;
-  hasura: boolean;
-  codegen: boolean;
-  getSchema: boolean;
-  graphqlClient?: GraphqlClient;
-}
+import { setupGraphqlClient } from "./graphql-client";
 
 export const initCommand = new Command()
   .name("init")

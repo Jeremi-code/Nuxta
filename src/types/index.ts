@@ -16,3 +16,13 @@ export interface CreateEnvOptions {
   header?: string;
   overwrite?: boolean;
 }
+
+export interface InitOptions {
+  git: boolean;
+  hasura: boolean;
+  codegen: boolean;
+  getSchema: boolean;
+  graphqlClient?: GraphqlClient;
+}
+
+export type GraphqlClient = "apollo" | "urql";
