@@ -8,7 +8,11 @@ import {
   ensureDirectoryExists,
   getAddCommand,
 } from "../utils";
-import { addNuxtModule, addApolloConfig } from "../utils/nuxt-config";
+import {
+  addNuxtModule,
+  addApolloConfig,
+  addRuntimeConfig,
+} from "../utils/nuxt-config";
 import { PackageManager, GraphqlClient } from "../types";
 import { createSpinner } from "../utils/spinner";
 import { createProgressBar } from "../utils/progress";
@@ -110,8 +114,9 @@ export default defineApolloClient({
       const urqlConfig = `import { createClient, provideClient } from '@urql/vue';
 
 export default defineNuxtPlugin((nuxtApp) => {
+  const runtimeConfig = useRuntimeConfig();
   const client = createClient({
-    url: process.env.NUXT_HASURA_GRAPHQL_ENDPOINT!,
+    url: runtimeConfig.public.hasuraGraphqlEndpoint,
     fetchOptions: () => {
       const token = useCookie('${tokenName}');
 
@@ -132,6 +137,15 @@ export default defineNuxtPlugin((nuxtApp) => {
       configSpinner.succeed(
         `Urql configuration created at ${pluginsDir}/urql.ts`
       );
+
+      const updateSpinner = createSpinner("Updating nuxt.config.ts...");
+      await addRuntimeConfig(
+        "hasuraGraphqlEndpoint",
+        "process.env.NUXT_HASURA_GRAPHQL_ENDPOINT",
+        true,
+        true
+      );
+      updateSpinner.succeed("Updated nuxt.config.ts");
 
       console.log(
         chalk.green(

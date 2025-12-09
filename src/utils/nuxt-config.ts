@@ -1,4 +1,4 @@
-import { loadFile, writeFile } from "magicast";
+import { loadFile, writeFile, builders } from "magicast";
 import * as path from "path";
 import * as fs from "fs";
 import { createSpinner } from "./spinner";
@@ -67,5 +67,25 @@ export async function addApolloConfig() {
       : "./apollo/apollo.ts";
 
     config.apollo.clients.default = clientPath;
+  });
+}
+
+export async function addRuntimeConfig(
+  key: string,
+  value: any,
+  isPublic: boolean = false,
+  isRaw: boolean = false
+) {
+  await updateNuxtConfig((config) => {
+    config.runtimeConfig ||= {};
+
+    const val = isRaw ? builders.raw(value) : value;
+
+    if (isPublic) {
+      config.runtimeConfig.public ||= {};
+      config.runtimeConfig.public[key] = val;
+    } else {
+      config.runtimeConfig[key] = val;
+    }
   });
 }
