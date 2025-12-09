@@ -1,4 +1,4 @@
-# create-nuxt-hasura-cli
+# nuxta
 
 A CLI tool to streamline the creation of Nuxt.js projects with integrated Hasura, GraphQL Codegen, and your choice of Apollo or Urql GraphQL client.
 
@@ -7,12 +7,14 @@ A CLI tool to streamline the creation of Nuxt.js projects with integrated Hasura
 To use this CLI tool, you need to have Node.js and pnpm installed.
 
 1. Clone the repository:
+
    ```bash
-   git clone https://github.com/your-username/create-nuxt-hasura-cli.git
-   cd create-nuxt-hasura-cli
+   git clone https://github.com/your-username/nuxta.git
+   cd nuxta
    ```
 
 2. Install dependencies:
+
    ```bash
    pnpm install
    ```
@@ -24,54 +26,41 @@ To use this CLI tool, you need to have Node.js and pnpm installed.
 
 ## Usage
 
-Once installed, you can use the `create-nuxt-hasura-cli` command (or `cnhc` if you set up an alias) to access the following commands:
+Once installed, you can use the `nuxta` command to access the following commands:
 
-### `cnhc init <project-name>`
+### `nuxta init <project-name>`
 
 Initializes a new Nuxt.js project with the specified name.
 
 ```bash
-cnhc init my-nuxt-app
+nuxta init my-nuxt-app
 ```
 
-### `cnhc hasura`
-
-Sets up GraphQL with Hasura in your Nuxt.js project. It will prompt you for your Hasura GraphQL endpoint and an optional admin secret.
-
-```bash
-cnhc hasura
-```
-
-### `cnhc codegen`
+### `nuxta codegen`
 
 Integrates GraphQL Codegen into your Nuxt.js project. It will prompt for the path to your GraphQL schema file and the output directory for generated types.
 
 ```bash
-cnhc codegen
+nuxta codegen
 ```
 
-### `cnhc get-schema`
+### `nuxta get-schema`
 
 Fetches the GraphQL schema from a specified endpoint and saves it to a file.
 
 ```bash
-cnhc get-schema
+nuxta get-schema
 ```
 
-### `cnhc graphql-client`
+### `nuxta graphql-client`
 
 Integrates either Nuxt Apollo or Urql GraphQL client into your Nuxt.js project. You will be prompted to choose your preferred client.
 
-```bash
-cnhc graphql-client
-```
-
-### `cnhc config`
-
-Configures default options for the CLI tool, such as default Hasura endpoint, schema path, and Codegen output directory. This creates a `.create-nuxt-hasura-cli.json` file in your project root.
+- **Apollo**: Automatically installs `@nuxtjs/apollo`, creates the configuration file, and updates `nuxt.config.ts` to include the module and client configuration.
+- **Urql**: Automatically installs `@urql/vue`, creates a plugin with authentication support, and updates `nuxt.config.ts` to expose the GraphQL endpoint via `runtimeConfig`.
 
 ```bash
-cnhc config
+nuxta graphql-client
 ```
 
 ## Development
@@ -92,3 +81,4 @@ To run tests:
 
 ```bash
 pnpm test
+```
