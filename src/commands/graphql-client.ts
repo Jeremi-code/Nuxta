@@ -8,6 +8,7 @@ import {
   ensureDirectoryExists,
   getAddCommand,
 } from "../utils";
+import { addNuxtModule, addApolloConfig } from "../utils/nuxt-config";
 import { PackageManager, GraphqlClient } from "../types";
 import { createSpinner } from "../utils/spinner";
 import { createProgressBar } from "../utils/progress";
@@ -78,11 +79,10 @@ export default defineApolloClient({
         `Apollo configuration created at ${configDir}/apollo.ts`
       );
 
-      console.log(
-        chalk.yellow(
-          '\nPlease remember to add "@nuxtjs/apollo" to your nuxt.config.ts modules.'
-        )
-      );
+      const updateSpinner = createSpinner("Updating nuxt.config.ts...");
+      await addNuxtModule("@nuxtjs/apollo");
+      await addApolloConfig();
+      updateSpinner.succeed("Updated nuxt.config.ts");
     } else if (selectedClient === "urql") {
       const { tokenName } = await inquirer.prompt([
         {
