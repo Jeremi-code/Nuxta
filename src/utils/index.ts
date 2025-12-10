@@ -1,7 +1,6 @@
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import chalk from "chalk";
 import { createSpinner } from "./spinner";
 import {
   ExecuteCommandOptions,
